@@ -1,0 +1,10 @@
+/target
+.vscode
+__pycache__
+.pytest_cache
+.env
+.venv
+*.egg-info
+Pipfile.lock
+.python-version
+.vscode/

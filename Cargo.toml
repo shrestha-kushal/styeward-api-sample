@@ -1,0 +1,22 @@
+[package]
+name = "styeward-api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rocket = { version = "0.5.0-rc.2", features = ["json"] }
+aws-config = "*"
+aws-sdk-s3 = "*"
+tokio = { version = "1", features = ["full"] }
+
+[dev-dependencies]
+rand = { version = "*", default-features = true}
+tokio-test = "*"
+temp-env = "*"
+http = "*"
+reqwest = {version = "*", features = ["rustls", "json", "stream"]}
+aws-sigv4 = "*"
+uuid = {version = "*", features = ["v4", "fast-rng", "macro-diagnostics"]}
+url = "*"
+serde_json = "*"
+serde = "*"

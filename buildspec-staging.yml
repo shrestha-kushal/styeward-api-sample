@@ -1,0 +1,43 @@
+version: 0.2
+
+env:
+  shell: bash
+
+phases:
+  install:
+    on-failure: ABORT
+    runtime-versions:
+      python: 3.10
+    commands:
+      - curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
+      - source "$HOME/.cargo/env"
+      - rustup update
+      - aws ecr get-login-password --region $ENV_AWS_REGION |
+        docker login --username AWS --password-stdin $ENV_ECR_REPO_URI
+      - pip install --upgrade pip
+      - pip install -r ./scripts/requirements.txt
+  pre_build:
+    on-failure: ABORT
+    commands:
+      - cargo test --bin styeward-api
+  build:
+    on-failure: ABORT
+    commands:
+      - cargo build --release
+      - docker build
+          --no-cache
+          --progress plain
+          -t local_lambda_image:$CODEBUILD_RESOLVED_SOURCE_VERSION .
+      - docker tag
+          local_lambda_image:$CODEBUILD_RESOLVED_SOURCE_VERSION
+          $ENV_ECR_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+  post_build:
+    on-failure: ABORT
+    commands:
+      - docker push $ENV_ECR_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - ENV_ECR_APP_IMAGE=$ENV_ECR_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+        python ./scripts/k8s_deployment.py
+      - ENV_STYEWARD_API_ROOT_URL=$ENV_STAGING_API_URL
+        ENV_STYEWARD_API_BUCKET=$ENV_BUCKET_WITH_JSON
+        ENV_STYEWARD_API_KEY_PREFIX=$ENV_JSON_S3_KEY_PREFIX
+        cargo test --bin system-tests

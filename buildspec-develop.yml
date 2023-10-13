@@ -1,0 +1,22 @@
+version: 0.2
+
+env:
+  shell: bash
+
+phases:
+  install:
+    on-failure: ABORT
+    runtime-versions:
+      python: 3.10
+    commands:
+      - curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
+      - source "$HOME/.cargo/env"
+      - rustup update
+  pre_build:
+    on-failure: ABORT
+    commands:
+      - cargo test --bin styeward-api
+  build:
+    on-failure: ABORT
+    commands:
+      - cargo build --release
